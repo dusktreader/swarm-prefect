@@ -1,3 +1,4 @@
+import os
 import prefect
 
 pull_task = prefect.tasks.docker.PullImage()
@@ -8,7 +9,7 @@ status_task = prefect.tasks.docker.WaitOnContainer()
 
 with prefect.Flow("hello-flow") as flow:
     pulled = pull_task(
-        repository="python",
+        repository="registry.hub.docker.com/library/python",
         tag="3.9-slim",
     )
     container_id = create_task(
@@ -21,6 +22,7 @@ with prefect.Flow("hello-flow") as flow:
 
 # flow.storage = prefect.storage.Docker(image_name='hello-docker', image_tag='latest')
 # flow.storage.build()
+prefect_version = os.environ.get("PREFECT_SERVER_TAG", "latest")
 flow.run_config = prefect.run_configs.DockerRun(
-    image="python:3.9-slim",
+    image=f"prefecthq/prefect:{prefect_version}",
 )

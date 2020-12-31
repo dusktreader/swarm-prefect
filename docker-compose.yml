@@ -127,6 +127,13 @@ services:
     environment:
       PREFECT_SERVER__APOLLO_URL: ${APOLLO_URL:-http://localhost:4200/graphql}
 
+  zaphod:
+    image: alpine/socat:latest
+    networks: ["prefect-server"]
+    ports: ["2375:2375"]
+    volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
+    command: tcp-listen:2375,fork,reuseaddr unix-connect:/var/run/docker.sock
+
 networks:
   prefect-server:
     name: prefect-server
