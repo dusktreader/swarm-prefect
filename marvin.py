@@ -4,7 +4,12 @@ import click
 import prefect
 import prefect_server.cli.database
 
-from helpers import SwarmPrefectError, logger, wait_for_client
+from helpers import (
+    SwarmPrefectError,
+    logger,
+    wait_for_client_api,
+    wait_for_tenant_function
+)
 
 
 def ascii_welcome(ui_port="8080"):
@@ -32,7 +37,7 @@ with prefect.utilities.configuration.set_temporary_config({
     "backend": "server",
 }):
     client = prefect.Client()
-    wait_for_client(client, require_tenant=False)
+    wait_for_client_api(client)
 
     logger.info("Now I have to prepare the database. What a challenge...")
     with SwarmPrefectError.handle_errors(
@@ -42,6 +47,7 @@ with prefect.utilities.configuration.set_temporary_config({
     ):
         prefect_server.cli.database.alembic_upgrade()
 
+    wait_for_tenant_function(client)
     if not client.get_available_tenants():
         logger.info("Sure, I'll create a defult tenant, but I won't enjoy it")
         client.create_tenant(name="default")

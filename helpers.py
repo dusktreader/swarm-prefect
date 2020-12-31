@@ -14,7 +14,7 @@ def snooze(message, delay=1.0):
     time.sleep(1.0)
 
 
-def wait_for_client(client, require_tenant=True):
+def wait_for_client_api(client):
     while True:
         logger.info("Attempting to ping the API")
         with SwarmPrefectError.handle_errors(
@@ -27,9 +27,8 @@ def wait_for_client(client, require_tenant=True):
             logger.info("Successfully hit the API. Moving on...")
             break
 
-    if not require_tenant:
-        return
 
+def wait_for_tenant_function(client):
     while True:
         logger.info("Checking the API for a tenant")
         with SwarmPrefectError.handle_errors(
@@ -39,13 +38,22 @@ def wait_for_client(client, require_tenant=True):
                 "Call to get_available_tenants() failed. API still isn't ready..."
             ),
         ):
-            tenants = client.get_available_tenants()
+            client.get_available_tenants()
             break
 
+
+def wait_for_tenant(client):
     while True:
+        tenants = client.get_available_tenants()
         if not tenants:
             snooze("No tenant yet. Still waiting...")
             tenants = client.get_available_tenants()
         else:
             logger.info("There's the tenant. Now, the client is ready")
             break
+
+
+def wait_for_client(client, require_tenant=True):
+    wait_for_client_api(client)
+    wait_for_tenant_function(client)
+    wait_for_tenant(client)
