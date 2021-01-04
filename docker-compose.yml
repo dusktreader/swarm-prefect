@@ -96,6 +96,8 @@ services:
       - "./trillian.py:/trillian.py"
       - "./helpers.py:/helpers.py"
       - "/var/run/docker.sock:/var/run/docker.sock"
+      - "./var/run/docker.sock:/var/run/docker.sock"
+      - "./flows:/flows"
     environment:
       APOLLO_URL: http://apollo:${APOLLO_HOST_PORT:-4200}
       PREFECT_API_URL: ${PREFECT_API_URL:-http://graphql:4201/graphql/}

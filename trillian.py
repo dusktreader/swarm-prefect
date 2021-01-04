@@ -39,6 +39,7 @@ with prefect.utilities.configuration.set_temporary_config(
         prefect.agent.docker.DockerAgent(
             show_flow_logs=True,
             docker_interface=False,
+            volumes="/flows:/root/.prefect/flows",
             network="prefect-server",
             base_url="tcp://zaphod:2375",
         ).start()
