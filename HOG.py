@@ -4,7 +4,7 @@ from helpers import SwarmPrefectError, logger, wait_for_client
 
 
 logger.info("Setting up cargo of workflows")
-apollo_host = os.environ["APOLLO_URL"]
+apollo_host = os.getenv("APOLLO_URL")
 with prefect.utilities.configuration.set_temporary_config(
     {
         "cloud.api": apollo_host,
@@ -12,7 +12,7 @@ with prefect.utilities.configuration.set_temporary_config(
         "backend": "server",
     }
 ):
-    project_name = os.environ.get("PROJECT_NAME")
+    project_name = os.getenv("PROJECT_NAME")
     SwarmPrefectError.require_condition(
         project_name,
         "No PROJECT_NAME found environment. Probability of success 0%",
@@ -46,6 +46,26 @@ with prefect.utilities.configuration.set_temporary_config(
         logger.info("Registering fetched flows")
         from flows import all_flows
 
+        prefect_version = os.getenv("PREFECT_SERVER_TAG", "latest")
+        flow_storage = prefect.storage.s3.S3(
+            bucket=os.getenv('S3_FLOW_BUCKET'),
+            client_options=dict(
+                # this should be a secret eventually
+                aws_access_key_id=os.getenv('S3_ACCESS_KEY'),
+                # this should be a secret eventually
+                aws_secret_access_key=os.getenv('S3_SECRET_KEY'),
+                endpoint_url=os.getenv('S3_URL'),
+            ),
+        )
         for flow in all_flows:
+            flow_storage.add_flow(flow)
+
+        built_storage = flow_storage.build()
+        for flow in all_flows:
+            flow.storage = built_storage
+            flow.run_config = prefect.run_configs.DockerRun(
+                image=f"prefecthq/prefect:{prefect_version}",
+            )
             flow.register(project_name=project_name)
+
         logger.info("All done!")

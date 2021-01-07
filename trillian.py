@@ -27,19 +27,10 @@ with prefect.utilities.configuration.set_temporary_config(
         client = prefect.Client()
         wait_for_client(client)
 
-        logger.info("Pulling base prefect image for docker agent first")
-        docker_client = docker.DockerClient(base_url="tcp://zaphod:2375")
-        prefect_version = os.environ.get("PREFECT_SERVER_TAG", "latest")
-        # docker_client.images.pull(
-        #     repository="registry.hub.docker.com/library/prefect",
-        #     tag=prefect_version,
-        # )
-
         logger.info("Starting a docker agent...")
         prefect.agent.docker.DockerAgent(
             show_flow_logs=True,
             docker_interface=False,
-            volumes="/flows:/root/.prefect/flows",
             network="prefect-server",
             base_url="tcp://zaphod:2375",
         ).start()
