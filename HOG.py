@@ -66,6 +66,16 @@ with prefect.utilities.configuration.set_temporary_config(
             flow.run_config = prefect.run_configs.DockerRun(
                 image=f"prefecthq/prefect:{prefect_version}",
             )
+            flow.result = prefect.engine.results.s3_result.S3Result(
+                bucket=os.getenv("S3_RESULT_BUCKET"),
+                boto3_kwargs=dict(
+                    # this should be a secret eventually
+                    aws_access_key_id=os.getenv('S3_ACCESS_KEY'),
+                    # this should be a secret eventually
+                    aws_secret_access_key=os.getenv('S3_SECRET_KEY'),
+                    endpoint_url=os.getenv('S3_URL'),
+                ),
+            )
             flow.register(project_name=project_name)
 
         logger.info("All done!")

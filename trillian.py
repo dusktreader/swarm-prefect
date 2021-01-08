@@ -5,8 +5,8 @@ basis for the theme of the Prefect project
 """
 
 import os
+import pathlib
 import prefect
-import docker
 from helpers import SwarmPrefectError, logger, wait_for_client
 
 
@@ -27,11 +27,16 @@ with prefect.utilities.configuration.set_temporary_config(
         client = prefect.Client()
         wait_for_client(client)
 
+        logger.info("Checking for volume")
+        staging = pathlib.Path("/staging")
+        SwarmPrefectError.require_condition(staging.exists(), "Staging doesn't exist")
+
         logger.info("Starting a docker agent...")
         prefect.agent.docker.DockerAgent(
             show_flow_logs=True,
             docker_interface=False,
             network="prefect-server",
+            volumes=["/staging:/staging"],
             base_url="tcp://zaphod:2375",
         ).start()
         logger.info("All done!")

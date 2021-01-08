@@ -97,6 +97,7 @@ services:
       - "./helpers.py:/helpers.py"
       - "/var/run/docker.sock:/var/run/docker.sock"
       - "./flows:/flows/"
+      - "./staging:/staging"
     environment:
       APOLLO_URL: http://apollo:${APOLLO_HOST_PORT:-4200}
       PREFECT_API_URL: ${PREFECT_API_URL:-http://graphql:4201/graphql/}
@@ -113,6 +114,7 @@ services:
       - "./HOG.py:/HOG.py"
       - "./helpers.py:/helpers.py"
       - "./flows:/flows"
+      - "./staging:/staging"
     environment:
       APOLLO_URL: http://apollo:${APOLLO_HOST_PORT:-4200}
       PREFECT_API_URL: ${PREFECT_API_URL:-http://graphql:4201/graphql/}
@@ -121,6 +123,7 @@ services:
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
       S3_FLOW_BUCKET: ${S3_FLOW_BUCKET}
+      S3_RESULT_BUCKET: ${S3_RESULT_BUCKET}
 
   ui:
     image: prefecthq/ui:${PREFECT_UI_TAG:-latest}
@@ -139,6 +142,24 @@ services:
     volumes: ["/var/run/docker.sock:/var/run/docker.sock"]
     command: tcp-listen:2375,fork,reuseaddr unix-connect:/var/run/docker.sock
 
+  dummy-ftp:
+    image: fauria/vsftpd
+    networks: ["prefect-server"]
+    ports:
+      - "20:20"
+      - "21:21"
+      - "21100-21110:21100-21110"
+    volumes: ["./ftp:/home/vsftpd"]
+    environment:
+      FTP_USER: "thedude"
+      FTP_PASS: "abides"
+      # PASV_ADDRESS: "192.168.1.227"
+      PASV_MIN_PORT: 21100
+      PASV_MAX_PORT: 21110
+      PASV_ADDRESS_ENABLE: "yes"
+      PASV_ENABLE: "yes"
+
+  # I think this one isn't needed
   registry:
     image: registry:latest
     restart: always
