@@ -143,27 +143,18 @@ services:
     command: tcp-listen:2375,fork,reuseaddr unix-connect:/var/run/docker.sock
 
   dummy-ftp:
-    image: fauria/vsftpd
+    image: atmoz/sftp
     networks: ["prefect-server"]
     ports:
-      - "20:20"
-      - "21:21"
-      - "21100-21110:21100-21110"
-    volumes: ["./ftp:/home/vsftpd"]
-    environment:
-      FTP_USER: "thedude"
-      FTP_PASS: "abides"
-      # PASV_ADDRESS: "192.168.1.227"
-      PASV_MIN_PORT: 21100
-      PASV_MAX_PORT: 21110
-      PASV_ADDRESS_ENABLE: "yes"
-      PASV_ENABLE: "yes"
+      - "22:22"
+    volumes: ["./ftp:/home/thedude/reports"]
+    command: ["thedude:abides:1001"]
 
   # I think this one isn't needed
-  registry:
-    image: registry:latest
-    restart: always
-    ports: ["5000:5000"]
+  # registry:
+  #   image: registry:latest
+  #   restart: always
+  #   ports: ["5000:5000"]
 
 networks:
   prefect-server:
